@@ -42,11 +42,9 @@ object RandomDataGenerator {
     val rows = sequenceOfRows.map(Row.fromSeq(_))
     val rdd = sc.makeRDD(rows)
     val schema: mutable.MutableList[StructField] = mutable.MutableList()
-    var iterator = 0
 
-    for (column <- HashCodeColumn() :: columns) {
-      schema += StructField(s"${iterator}_${column.name}", column.dataType)
-      iterator += 1
+    for ((column, i) <- (HashCodeColumn() :: columns).view.zipWithIndex) {
+      schema += StructField(s"${i}_${column.name}", column.dataType)
     }
 
     val dataFrame = sparkSession.createDataFrame(rdd, StructType(schema))
