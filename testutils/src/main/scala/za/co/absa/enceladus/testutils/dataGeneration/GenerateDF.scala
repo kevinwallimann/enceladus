@@ -37,7 +37,7 @@ object RandomDataGenerator {
 
     val numOfRows = 10
     val numOfColumns = 4
-    val columns: List[ColumnType[Any]] = generateColumns(numOfColumns - 1)
+    val columns: List[ColumnType[_]] = generateColumns(numOfColumns - 1)
     val sequenceOfRows: Seq[List[Any]] = Seq.fill(numOfRows) { generateRow(columns) }
     val rows = sequenceOfRows.map(Row.fromSeq(_))
     val rdd = sc.makeRDD(rows)
@@ -51,7 +51,7 @@ object RandomDataGenerator {
     dataFrame.write.parquet("/tmp/generatedData")
   }
 
-  def generateRow(columns: List[ColumnType[Any]]): List[Any] = {
+  def generateRow(columns: List[ColumnType[_]]): List[Any] = {
     val listOfValues: mutable.MutableList[Any] = mutable.MutableList()
     var hashCode = 0
 
@@ -63,18 +63,18 @@ object RandomDataGenerator {
     hashCode :: listOfValues.toList
   }
 
-  def generateColumns(numberOfColumns: Int): List[ColumnType[Any]] = {
-    val listOfCoulmns: mutable.MutableList[ColumnType[Any]] = mutable.MutableList()
+  def generateColumns(numberOfColumns: Int): List[ColumnType[_]] = {
+    val listOfCoulmns: mutable.MutableList[ColumnType[_]] = mutable.MutableList()
 
     for (_ <- 0 until numberOfColumns) {
       listOfCoulmns += (randomGenerator.nextLong match {
-        case x if x % 13 == 0 => BooleanColumn()[Boolean]
-        case x if x % 11 == 0 => StringColumn()[String]
-        case x if x % 7  == 0 => DateColumn()[DateTime]
-        case x if x % 5  == 0 => FloatColumn()[Float]
-        case x if x % 3  == 0 => LongColumn()[Long]
-        case x if x % 2  == 0 => IntegerColumn()[Int]
-        case _                => DoubleColumn()[Double]
+        case x if x % 13 == 0 => BooleanColumn()
+        case x if x % 11 == 0 => StringColumn()
+        case x if x % 7  == 0 => DateColumn()
+        case x if x % 5  == 0 => FloatColumn()
+        case x if x % 3  == 0 => LongColumn()
+        case x if x % 2  == 0 => IntegerColumn()
+        case _                => DoubleColumn()
       })
     }
 
@@ -84,7 +84,7 @@ object RandomDataGenerator {
 
 sealed abstract class ColumnType[T](val name: String, val dataType: DataType){
   final protected val randomGenerator = scala.util.Random
-  abstract def generateRandomValue: T
+  def generateRandomValue: T
 }
 
 case class StringColumn() extends ColumnType[String]("String", StringType){
