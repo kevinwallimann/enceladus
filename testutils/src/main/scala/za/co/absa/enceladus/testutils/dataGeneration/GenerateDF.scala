@@ -20,7 +20,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row, SparkSession}
 import org.joda.time.DateTime
 
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 
 object RandomDataGenerator {
   final private val randomGenerator = scala.util.Random
@@ -87,24 +87,35 @@ sealed abstract class ColumnType[T](val name: String, val dataType: DataType){
   def generateRandomValue: T
 }
 
-case class StringColumn() extends ColumnType[String]("String", StringType){
+case class StringColumn(numberOfChars: Int, includeSpecialChars: Boolean)
+  extends ColumnType[String]("String", StringType){
   final private val range = 110
-  final private val asciiBigCharStart = 65
-  final private val asciiSmallCharStart = 97
-  final private val lettersInAlphabet = 26
-  final private val numberOfChars = 30
+  final private val bigCharSeq: Seq[Char] = 'A' to 'Z'
+  final private val smallCharSeq: Seq[Char] = 'a' to 'z'
+  final private val specialChars: Seq[Char] = (' ' to '/') ++ ('{' to '~') ++ ('[' to '`') ++ (':' to '@')
+  final private val otherChars: Seq[Char] = if (includeSpecialChars) specialChars else Seq(' ')
 
   override def generateRandomValue: String = {
     val stringBuilder: mutable.StringBuilder = new mutable.StringBuilder()
     for (_ <- 0 until numberOfChars) {
       stringBuilder.append(randomGenerator.nextInt(range) match {
-        case x if x % 11 == 0 => " "
-        case x if x % 2  == 0 => (randomGenerator.nextInt(lettersInAlphabet) + asciiSmallCharStart).toChar
-        case _           => (randomGenerator.nextInt(lettersInAlphabet) + asciiBigCharStart).toChar
+        case x if x % 11 == 0 => otherChars
+        case x if x % 2  == 0 => bigCharSeq(randomGenerator.nextInt(bigCharSeq.size))
+        case _                => smallCharSeq(randomGenerator.nextInt(smallCharSeq.size))
       })
     }
     stringBuilder.toString()
   }
+}
+
+object StringColumn {
+  final private val defaultLength: Int = 30
+  final private val defaultSpecialChars: Boolean = false
+
+  def apply(numberOfChars: Int): StringColumn = new StringColumn(numberOfChars, defaultSpecialChars)
+  def apply(specialChars: Boolean): StringColumn = new StringColumn(defaultLength, specialChars)
+  def apply(numberOfChars: Int, specialChars: Boolean): StringColumn = new StringColumn(numberOfChars, specialChars)
+  def apply(): StringColumn = new StringColumn(defaultLength, defaultSpecialChars)
 }
 
 case class IntegerColumn() extends ColumnType[Int]("Integer", IntegerType){
