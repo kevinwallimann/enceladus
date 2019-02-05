@@ -18,9 +18,9 @@ package za.co.absa.enceladus.testutils.dataGeneration
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row, SparkSession}
-import org.joda.time.DateTime
+import za.co.absa.enceladus.testutils.dataGeneration.columnTypes._
 
-import scala.collection.{immutable, mutable}
+import scala.collection.mutable
 
 object RandomDataGenerator {
   final private val randomGenerator = scala.util.Random
@@ -82,73 +82,4 @@ object RandomDataGenerator {
   }
 }
 
-sealed abstract class ColumnType[T](val name: String, val dataType: DataType){
-  final protected val randomGenerator = scala.util.Random
-  def generateRandomValue: T
-}
 
-case class StringColumn(numberOfChars: Int, includeSpecialChars: Boolean)
-  extends ColumnType[String]("String", StringType){
-  final private val range = 110
-  final private val bigCharSeq: Seq[Char] = 'A' to 'Z'
-  final private val smallCharSeq: Seq[Char] = 'a' to 'z'
-  final private val specialChars: Seq[Char] = (' ' to '/') ++ ('{' to '~') ++ ('[' to '`') ++ (':' to '@')
-  final private val otherChars: Seq[Char] = if (includeSpecialChars) specialChars else Seq(' ')
-
-  override def generateRandomValue: String = {
-    val stringBuilder: mutable.StringBuilder = new mutable.StringBuilder()
-    for (_ <- 0 until numberOfChars) {
-      stringBuilder.append(randomGenerator.nextInt(range) match {
-        case x if x % 11 == 0 => otherChars
-        case x if x % 2  == 0 => bigCharSeq(randomGenerator.nextInt(bigCharSeq.size))
-        case _                => smallCharSeq(randomGenerator.nextInt(smallCharSeq.size))
-      })
-    }
-    stringBuilder.toString()
-  }
-}
-
-object StringColumn {
-  final private val defaultLength: Int = 30
-  final private val defaultSpecialChars: Boolean = false
-
-  def apply(numberOfChars: Int): StringColumn = new StringColumn(numberOfChars, defaultSpecialChars)
-  def apply(specialChars: Boolean): StringColumn = new StringColumn(defaultLength, specialChars)
-  def apply(numberOfChars: Int, specialChars: Boolean): StringColumn = new StringColumn(numberOfChars, specialChars)
-  def apply(): StringColumn = new StringColumn(defaultLength, defaultSpecialChars)
-}
-
-case class IntegerColumn() extends ColumnType[Int]("Integer", IntegerType){
-  override def generateRandomValue: Int = randomGenerator.nextInt
-}
-
-case class BooleanColumn() extends ColumnType[Boolean]("Boolean", BooleanType){
-  override def generateRandomValue: Boolean = randomGenerator.nextBoolean
-}
-
-case class FloatColumn() extends ColumnType[Float]("Float", FloatType){
-  override def generateRandomValue: Float = randomGenerator.nextFloat
-}
-
-case class DoubleColumn() extends ColumnType[Double]("Double", DoubleType){
-  override def generateRandomValue: Double = randomGenerator.nextDouble
-}
-
-case class DateColumn() extends ColumnType[DateTime]("Date", DateType){
-  final private val multiplier = 1000
-
-  override def generateRandomValue: DateTime = {
-    val ratio = randomGenerator.nextInt(multiplier)
-    val difference = DateTime.now.getMillis
-    val surplusMillis = (difference * (ratio / 1000.0)).asInstanceOf[Long]
-    new DateTime(surplusMillis)
-  }
-}
-
-case class LongColumn() extends ColumnType[Long]("Long", LongType){
-  override def generateRandomValue: Long = randomGenerator.nextLong
-}
-
-case class HashCodeColumn() extends ColumnType[Int]("HashCode", IntegerType){
-  override def generateRandomValue: Int = randomGenerator.nextInt
-}
