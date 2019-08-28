@@ -125,6 +125,7 @@
         <!--plugin versions-->
         <maven.compiler.source>1.6</maven.compiler.source>
         <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.resources.version>3.1.0</maven.resources.version>
         <maven.surefire.version>2.18.1</maven.surefire.version>
         <maven.scala.version>3.2.0</maven.scala.version>
         <maven.shade.version>2.3</maven.shade.version>
@@ -133,6 +134,7 @@
         <maven.ant.plugin.version>1.8</maven.ant.plugin.version>
         <maven.rat.plugin.version>0.12</maven.rat.plugin.version>
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
+        <maven.gitflow.plugin.version>1.12.0</maven.gitflow.plugin.version>
         <!--dependency versions-->
         <atum.version>0.2.3</atum.version>
         <junit.version>4.11</junit.version>
@@ -298,6 +300,20 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>${maven.scala.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>compile</goal>
+                                <goal>testCompile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
                     <groupId>org.scalastyle</groupId>
                     <artifactId>scalastyle-maven-plugin</artifactId>
                     <version>1.0.0</version>
@@ -319,91 +335,169 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!-- disable surefire -->
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.version}</version>
+                    <configuration>
+                        <skipTests>true</skipTests>
+                    </configuration>
+                </plugin>
+                <!-- enable scalatest -->
+                <plugin>
+                    <groupId>org.scalatest</groupId>
+                    <artifactId>scalatest-maven-plugin</artifactId>
+                    <version>${scalatest.maven.version}</version>
+                    <configuration>
+                        <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                        <junitxml>.</junitxml>
+                        <filereports>WDF TestSuite.txt</filereports>
+                        <!--
+                            Set heap memory to 4000 MB so array conformance test and conformance
+                            end to end test could run. This can be removed later when dynamic conformance
+                            becomes more efficient
+                        -->
+                        <argLine>-Xmx4000m -Dfile.encoding=UTF-8</argLine>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>unit-tests</id>
+                            <goals>
+                                <goal>test</goal>
+                            </goals>
+                            <configuration>
+                                <suffixes>(?&lt;!IntegrationSuite)</suffixes>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>integration-tests</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>test</goal>
+                            </goals>
+                            <configuration>
+                                <suffixes>(?&lt;=IntegrationSuite)</suffixes>
+                                <skipTests>${skip.integration.tests}</skipTests>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${maven.resources.version}</version>
+                    <configuration>
+                        <delimiters>
+                            <delimiter>@</delimiter>
+                        </delimiters>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.amashchenko.maven.plugin</groupId>
+                    <artifactId>gitflow-maven-plugin</artifactId>
+                    <version>${maven.gitflow.plugin.version}</version>
+                    <configuration>
+                        <installProject>true</installProject>
+                        <verbose>true</verbose>
+                        <gitFlowConfig>
+                            <productionBranch>master</productionBranch>
+                            <developmentBranch>develop</developmentBranch>
+                            <featureBranchPrefix>feature/</featureBranchPrefix>
+                            <releaseBranchPrefix>release/v</releaseBranchPrefix>
+                            <hotfixBranchPrefix>hotfix/</hotfixBranchPrefix>
+                            <versionTagPrefix>v</versionTagPrefix>
+                            <origin>origin</origin>
+                        </gitFlowConfig>
+                        <commitDevelopmentVersionAtStart>true</commitDevelopmentVersionAtStart>
+                        <versionDigitToIncrement>1</versionDigitToIncrement>
+                        <commitMessages>
+                            <releaseStartMessage>Update versions for release v@{version}</releaseStartMessage>
+                            <releaseFinishMessage>Update for next development version @{version}</releaseFinishMessage>
+                        </commitMessages>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <version>${maven.rat.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <excludes>
+                            <exclude>**/*.json</exclude>
+                            <exclude>**/*.csv</exclude>
+                            <exclude>**/*.txt</exclude>
+                            <exclude>**/*.md</exclude>
+                            <exclude>**/*.MF</exclude>
+                            <exclude>**/*.crc</exclude>
+                            <exclude>**/*.parquet</exclude>
+                            <exclude>**/_SUCCESS</exclude>
+                            <exclude>**/_INFO</exclude>
+                            <exclude>**/json_output</exclude>
+                            <exclude>.editorconfig</exclude>
+                            <exclude>dependency-reduced-pom.xml</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven.sources.version}</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven.gpg.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
-            <!-- disable surefire -->
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.version}</version>
-                <configuration>
-                    <skipTests>true</skipTests>
-                </configuration>
             </plugin>
-            <!-- enable scalatest -->
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>${scalatest.maven.version}</version>
-                <configuration>
-                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                    <junitxml>.</junitxml>
-                    <filereports>WDF TestSuite.txt</filereports>
-                    <!--
-                        Set heap memory to 4000 MB so array conformance test and conformance
-                        end to end test could run. This can be removed later when dynamic conformance
-                        becomes more efficient
-                    -->
-                    <argLine>-Xmx4000m -Dfile.encoding=UTF-8</argLine>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>unit-tests</id>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <suffixes>(?&lt;!IntegrationSuite)</suffixes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>integration-tests</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <configuration>
-                            <suffixes>(?&lt;=IntegrationSuite)</suffixes>
-                            <skipTests>${skip.integration.tests}</skipTests>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.amashchenko.maven.plugin</groupId>
-                <artifactId>gitflow-maven-plugin</artifactId>
-                <version>1.12.0</version>
-                <configuration>
-                    <installProject>true</installProject>
-                    <verbose>true</verbose>
-
-                    <gitFlowConfig>
-                        <productionBranch>master</productionBranch>
-                        <developmentBranch>develop</developmentBranch>
-                        <featureBranchPrefix>feature/</featureBranchPrefix>
-                        <releaseBranchPrefix>release/v</releaseBranchPrefix>
-                        <hotfixBranchPrefix>hotfix/</hotfixBranchPrefix>
-                        <versionTagPrefix>v</versionTagPrefix>
-                        <origin>origin</origin>
-                    </gitFlowConfig>
-                    <commitDevelopmentVersionAtStart>true</commitDevelopmentVersionAtStart>
-                    <versionDigitToIncrement>1</versionDigitToIncrement>
-
-                    <commitMessages>
-                        <releaseStartMessage>Update versions for release v@{version}</releaseStartMessage>
-                        <releaseFinishMessage>Update for next development version @{version}</releaseFinishMessage>
-                    </commitMessages>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <delimiters>
-                        <delimiter>@</delimiter>
-                    </delimiters>
-                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.amashchenko.maven.plugin</groupId>
+                <artifactId>gitflow-maven-plugin</artifactId>
             </plugin>
         </plugins>
         <resources>
@@ -440,31 +534,6 @@
                     <plugin>
                         <groupId>org.apache.rat</groupId>
                         <artifactId>apache-rat-plugin</artifactId>
-                        <version>${maven.rat.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <excludes>
-                                <exclude>**/*.json</exclude>
-                                <exclude>**/*.csv</exclude>
-                                <exclude>**/*.txt</exclude>
-                                <exclude>**/*.md</exclude>
-                                <exclude>**/*.MF</exclude>
-                                <exclude>**/*.crc</exclude>
-                                <exclude>**/*.parquet</exclude>
-                                <exclude>**/_SUCCESS</exclude>
-                                <exclude>**/_INFO</exclude>
-                                <exclude>**/json_output</exclude>
-                                <exclude>.editorconfig</exclude>
-                                <exclude>dependency-reduced-pom.xml</exclude>
-                            </excludes>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -472,46 +541,32 @@
         <profile>
             <id>public</id>
             <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>net.alchim31.maven</groupId>
+                            <artifactId>scala-maven-plugin</artifactId>
+                            <version>${maven.scala.version}</version>
+                            <executions>
+                                <execution>
+                                    <id>attach-javadocs</id>
+                                    <goals>
+                                        <goal>doc-jar</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>${maven.sources.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>net.alchim31.maven</groupId>
-                        <artifactId>scala-maven-plugin</artifactId>
-                        <version>${maven.scala.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>doc-jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven.gpg.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>
