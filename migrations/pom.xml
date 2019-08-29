@@ -30,6 +30,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>za.co.absa</groupId>
+            <artifactId>atum</artifactId>
+        </dependency>
+
         <!-- Jackson -->
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
