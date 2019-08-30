@@ -182,7 +182,7 @@
         <!--other properties-->
         <skip.integration.tests>true</skip.integration.tests>
         <scalastyle.configLocation>${project.basedir}/scalastyle-config.xml</scalastyle.configLocation>
-        <!-- logging-->
+        <!--logging-->
         <log.level.base>WARN</log.level.base>
         <log.level.testcode>ERROR</log.level.testcode>
         <log.pattern>[%p] %d{yy/MM/dd HH:mm:ss} %c{4}: %m%n</log.pattern>
@@ -197,6 +197,12 @@
                 <version>${scala.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <dependency>
+                <groupId>com.github.scopt</groupId>
+                <artifactId>scopt_${scala.compat.version}</artifactId>
+                <version>${scopt.version}</version>
+            </dependency>
+            <!--Spark-->
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
@@ -256,11 +262,17 @@
                 <version>${parquet.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.databricks</groupId>
+                <artifactId>spark-xml_${scala.compat.version}</artifactId>
+                <version>${spark.xml.version}</version>
+            </dependency>
+            <!--other-->
+            <dependency>
                 <groupId>com.typesafe</groupId>
                 <artifactId>config</artifactId>
                 <version>${typesafe.config.version}</version>
             </dependency>
-            <!-- Absa -->
+            <!--Absa-->
             <dependency>
                 <groupId>za.co.absa</groupId>
                 <artifactId>enceladus-dataModel</artifactId>
@@ -268,8 +280,62 @@
             </dependency>
             <dependency>
                 <groupId>za.co.absa</groupId>
+                <artifactId>enceladus-migrations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>za.co.absa</groupId>
+                <artifactId>enceladus-fixedWidth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>za.co.absa</groupId>
                 <artifactId>enceladus-utils</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>za.co.absa.spline</groupId>
+                <artifactId>spline-core</artifactId>
+                <version>${spline.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>net.jpountz.lz4</groupId>
+                        <artifactId>lz4</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>za.co.absa.spline</groupId>
+                <artifactId>spline-core-spark-adapter-${spark.compat.version}</artifactId>
+                <version>${spline.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>net.jpountz.lz4</groupId>
+                        <artifactId>lz4</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>za.co.absa.spline</groupId>
+                <artifactId>spline-persistence-mongo</artifactId>
+                <version>${spline.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>net.jpountz.lz4</groupId>
+                        <artifactId>lz4</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>za.co.absa.spline</groupId>
+                <artifactId>spline-persistence-hdfs</artifactId>
+                <version>${spline.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>net.jpountz.lz4</groupId>
+                        <artifactId>lz4</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>za.co.absa</groupId>
@@ -281,13 +347,18 @@
                 <artifactId>atum</artifactId>
                 <version>${atum.version}</version>
             </dependency>
-            <!-- Spring -->
+            <dependency>
+                <groupId>za.co.absa.cobrix</groupId>
+                <artifactId>spark-cobol</artifactId>
+                <version>${cobrix.version}</version>
+            </dependency>
+            <!--Spring-->
             <dependency>
                 <groupId>org.springframework.security.kerberos</groupId>
                 <artifactId>spring-security-kerberos-client</artifactId>
                 <version>${spring.kerberos.version}</version>
             </dependency>
-            <!-- Jackson -->
+            <!--Jackson-->
             <dependency>
                 <groupId>com.fasterxml.jackson.module</groupId>
                 <artifactId>jackson-module-scala_${scala.compat.version}</artifactId>
@@ -303,7 +374,7 @@
                 <artifactId>jackson-databind</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
-            <!-- MONGO -->
+            <!--MONGO-->
             <dependency>
                 <groupId>org.mongodb.scala</groupId>
                 <artifactId>mongo-scala-driver_${scala.compat.version}</artifactId>
@@ -319,7 +390,12 @@
                 <artifactId>bson</artifactId>
                 <version>${bson.version}</version>
             </dependency>
-            <!-- Test -->
+            <dependency> <!-- Required for Spline compatibility -->
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongo-java-driver</artifactId>
+                <version>${mongo.java.driver.version}</version>
+            </dependency>
+            <!--Test-->
             <dependency>
                 <groupId>org.specs2</groupId>
                 <artifactId>specs2-core_${scala.compat.version}</artifactId>
@@ -393,7 +469,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                <!-- disable surefire -->
+                <!--disable surefire-->
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.version}</version>
@@ -401,7 +477,7 @@
                         <skipTests>true</skipTests>
                     </configuration>
                 </plugin>
-                <!-- enable scalatest -->
+                <!--enable scalatest-->
                 <plugin>
                     <groupId>org.scalatest</groupId>
                     <artifactId>scalatest-maven-plugin</artifactId>

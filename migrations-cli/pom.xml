@@ -32,24 +32,18 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>za.co.absa</groupId>
             <artifactId>enceladus-migrations</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.scopt</groupId>
             <artifactId>scopt_${scala.compat.version}</artifactId>
-            <version>${scopt.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.json4s</groupId>
-            <artifactId>json4s-jackson_${scala.compat.version}</artifactId>
-            <version>${json4s.version}</version>
         </dependency>
     </dependencies>
 
