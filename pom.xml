@@ -178,6 +178,7 @@
         <oozie.version>4.3.0</oozie.version>
         <htrace.version>3.1.0-incubating</htrace.version>
         <cronstrue.version>1.79.0</cronstrue.version>
+        <httpclient.version>4.5.8</httpclient.version>
         <!--other properties-->
         <skip.integration.tests>true</skip.integration.tests>
         <scalastyle.configLocation>${project.basedir}/scalastyle-config.xml</scalastyle.configLocation>
@@ -195,6 +196,11 @@
                 <artifactId>scala-library</artifactId>
                 <version>${scala.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
@@ -250,6 +256,22 @@
                 <version>${parquet.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.typesafe</groupId>
+                <artifactId>config</artifactId>
+                <version>${typesafe.config.version}</version>
+            </dependency>
+            <!-- Absa -->
+            <dependency>
+                <groupId>za.co.absa</groupId>
+                <artifactId>enceladus-dataModel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>za.co.absa</groupId>
+                <artifactId>enceladus-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>za.co.absa</groupId>
                 <artifactId>spark-hofs</artifactId>
                 <version>${spark.hofs.version}</version>
@@ -258,6 +280,12 @@
                 <groupId>za.co.absa</groupId>
                 <artifactId>atum</artifactId>
                 <version>${atum.version}</version>
+            </dependency>
+            <!-- Spring -->
+            <dependency>
+                <groupId>org.springframework.security.kerberos</groupId>
+                <artifactId>spring-security-kerberos-client</artifactId>
+                <version>${spring.kerberos.version}</version>
             </dependency>
             <!-- Jackson -->
             <dependency>
