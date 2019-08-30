@@ -191,11 +191,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.mongodb</groupId>
-                <artifactId>bson</artifactId>
-                <version>${bson.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.scala-lang</groupId>
                 <artifactId>scala-library</artifactId>
                 <version>${scala.version}</version>
@@ -263,6 +258,38 @@
                 <groupId>za.co.absa</groupId>
                 <artifactId>atum</artifactId>
                 <version>${atum.version}</version>
+            </dependency>
+            <!-- Jackson -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-scala_${scala.compat.version}</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <!-- MONGO -->
+            <dependency>
+                <groupId>org.mongodb.scala</groupId>
+                <artifactId>mongo-scala-driver_${scala.compat.version}</artifactId>
+                <version>${mongo.scala.driver.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.cbartosiak</groupId>
+                <artifactId>bson-codecs-jsr310</artifactId>
+                <version>${bson.codec.jsr310.version}</version>
+            </dependency>
+            <dependency> <!-- TODO: #854 -->
+                <groupId>org.mongodb</groupId>
+                <artifactId>bson</artifactId>
+                <version>${bson.version}</version>
             </dependency>
             <!-- Test -->
             <dependency>
