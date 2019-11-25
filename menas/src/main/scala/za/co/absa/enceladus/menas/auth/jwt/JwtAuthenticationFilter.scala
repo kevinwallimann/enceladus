@@ -34,11 +34,19 @@ import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
 @Component
-class JwtAuthenticationFilter @Autowired()(jwtParser: JwtParser) extends OncePerRequestFilter {
+class JwtAuthenticationFilter @Autowired()(jwtParser: JwtParser,
+                                           jwtCookieFactory: JwtCookieFactory)
+  extends OncePerRequestFilter {
 
   override def doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain): Unit = {
     getAuthentication(request)
-      .foreach(SecurityContextHolder.getContext.setAuthentication)
+      .foreach { auth =>
+        SecurityContextHolder.getContext.setAuthentication(auth)
+
+        val csrfToken = request.getAttribute(CsrfTokenKey).asInstanceOf[String]
+        val refreshedJwtCookie = jwtCookieFactory.createJwtCookie(auth, csrfToken, request.getContextPath)
+        response.addCookie(refreshedJwtCookie)
+      }
 
     chain.doFilter(request, response)
   }
@@ -76,18 +84,24 @@ class JwtAuthenticationFilter @Autowired()(jwtParser: JwtParser) extends OncePer
     val groups = Option(jwtClaims.get(GroupsKey, classOf[util.List[String]]))
       .getOrElse(new util.ArrayList[String]()).asScala
 
-    groups.map(k => new SimpleGrantedAuthority(k)).asJava
+    groups.map(group => new SimpleGrantedAuthority(group)).asJava
   }
 
   private def isCsrfSafe(request: HttpServletRequest, jwtClaims: Claims): Boolean = {
-    request.getMethod.toUpperCase match {
-      case "GET" => true
+    val isSafe = request.getMethod.toUpperCase match {
+      case "GET" =>
+        Option(jwtClaims.get(CsrfTokenKey, classOf[String])).isDefined
       case _     =>
         val csrfToken = Option(request.getHeader(CsrfTokenKey))
         val jwtCsrfToken = jwtClaims.get(CsrfTokenKey, classOf[String])
         csrfToken.contains(jwtCsrfToken)
     }
 
+    if (isSafe) {
+      request.setAttribute(CsrfTokenKey, jwtClaims.get(CsrfTokenKey, classOf[String]))
+    }
+
+    isSafe
   }
 
   private def getJwtCookie(request: HttpServletRequest): Option[String] = {

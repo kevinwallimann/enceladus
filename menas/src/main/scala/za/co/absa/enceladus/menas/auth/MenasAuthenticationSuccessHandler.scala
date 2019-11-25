@@ -17,54 +17,29 @@ package za.co.absa.enceladus.menas.auth
 
 import java.util.UUID
 
-import io.jsonwebtoken.JwtBuilder
-import javax.servlet.http.{Cookie, HttpServletRequest, HttpServletResponse}
-import org.joda.time.{DateTime, DateTimeZone, Hours}
-import org.springframework.beans.factory.annotation.{Autowired, Value}
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler
 import org.springframework.stereotype.Component
 import za.co.absa.enceladus.menas.auth.AuthConstants._
-
-import scala.collection.JavaConverters._
+import za.co.absa.enceladus.menas.auth.jwt.JwtCookieFactory
 
 @Component
-class MenasAuthenticationSuccessHandler @Autowired()(jwtBuilder: JwtBuilder,
-                                                     @Value("${za.co.absa.enceladus.menas.auth.jwt.lifespan.hours}")
-                                                     jwtLifespanHours: Int,
-                                                     @Value("${timezone}")
-                                                     timezone: String)
+class MenasAuthenticationSuccessHandler @Autowired()(jwtCookieFactory: JwtCookieFactory)
   extends SimpleUrlAuthenticationSuccessHandler {
 
   override def onAuthenticationSuccess(request: HttpServletRequest,
                                        response: HttpServletResponse,
                                        authentication: Authentication): Unit = {
-    val user = authentication.getPrincipal.asInstanceOf[UserDetails]
     val csrfToken = UUID.randomUUID().toString
     response.addHeader(CsrfTokenKey, csrfToken)
 
-    val expiry = Hours.hours(jwtLifespanHours).toStandardSeconds
-    val jwtExpirationTime = DateTime.now(DateTimeZone.forID(timezone)).plus(expiry).toDate
-    val cookieLifetime = expiry.getSeconds
-
-    val groups = authentication
-      .getAuthorities.asScala
-      .map(_.getAuthority).asJava
-
-    val jwt = jwtBuilder
-      .setSubject(user.getUsername)
-      .setExpiration(jwtExpirationTime)
-      .claim(CsrfTokenKey, csrfToken)
-      .claim(GroupsKey, groups)
-      .compact()
-
-    val cookie = new Cookie(JwtCookieKey, jwt)
-    cookie.setPath(request.getContextPath)
-    cookie.setMaxAge(cookieLifetime)
-    response.addCookie(cookie)
+    val jwtCookie = jwtCookieFactory.createJwtCookie(authentication, csrfToken, request.getContextPath)
+    response.addCookie(jwtCookie)
 
     clearAuthenticationAttributes(request)
   }
 
 }
+
