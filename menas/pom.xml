@@ -29,6 +29,7 @@
         <scala.xml.version>1.0.4</scala.xml.version>
         <webui.basedir>${project.basedir}/ui</webui.basedir>
         <scalastyle.configLocation>${project.parent.basedir}/scalastyle-config.xml</scalastyle.configLocation>
+        <embedded.mongo.version>2.2.0</embedded.mongo.version>
     </properties>
 
     <dependencies>
@@ -263,6 +264,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <version>${embedded.mongo.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
