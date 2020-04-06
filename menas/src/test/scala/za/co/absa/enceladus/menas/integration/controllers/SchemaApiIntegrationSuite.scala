@@ -18,8 +18,10 @@ package za.co.absa.enceladus.menas.integration.controllers
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import za.co.absa.enceladus.menas.integration.fixtures._
+import za.co.absa.enceladus.menas.integration.mongo.EmbeddedMongo
 import za.co.absa.enceladus.menas.models.Validation
 import za.co.absa.enceladus.menas.models.rest.RestResponse
 import za.co.absa.enceladus.menas.models.rest.errors.{SchemaFormatError, SchemaParsingError}
@@ -33,6 +35,7 @@ import scala.collection.immutable.HashMap
 
 @RunWith(classOf[SpringRunner])
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(classes = Array(classOf[EmbeddedMongo]))
 class SchemaApiIntegrationSuite extends BaseRestApiTest {
 
   @Autowired

@@ -21,18 +21,30 @@ import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.mongo.{MongodExecutable, MongodStarter}
 import de.flapdoodle.embed.process.runtime.Network
 import javax.annotation.{PostConstruct, PreDestroy}
+import org.apache.naming.factory.FactoryBase
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.FactoryBean
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.mock.mockito.{MockBean, MockReset}
-import org.springframework.stereotype.Component
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.{Bean, Configuration}
 import za.co.absa.enceladus.menas.utils.implicits.codecRegistry
 
 /**
  * Provides an embedded local mongo. Spawn it before tests and shutdown after
  */
-@Component
+@TestConfiguration
 class EmbeddedMongo {
+
+  @Bean // tried mockbean, too
+  def mongoDatabaseBean: MongoDatabaseFactoryBean = {
+    new MongoDatabaseFactoryBean
+  }
+
+}
+
+@Configuration
+class MongoDatabaseFactoryBean extends FactoryBean[MongoDatabase] {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private var mongodExecutable: MongodExecutable = _
   private var mongoPort: Int = _
@@ -44,7 +56,7 @@ class EmbeddedMongo {
   @Value("${menas.mongo.connection.database}")
   val database: String = ""
 
-  @PostConstruct
+  //@PostConstruct
   def runDummyMongo(): Unit = {
     val starter = MongodStarter.getDefaultInstance
 
@@ -59,27 +71,20 @@ class EmbeddedMongo {
     }
 
     mongodExecutable.start()
-    mongoDb = MongoClient(getMongoUri).getDatabase(database).withCodecRegistry(codecRegistry)
+    //mongoDb = MongoClient(getMongoUri).getDatabase(database).withCodecRegistry(codecRegistry)
     logger.debug(s"*** mongod started at port $mongoPort")
   }
 
-  @PreDestroy
+  //@PreDestroy
   def shutdownDummyMongo(): Unit = {
     mongodExecutable.stop()
   }
 
-  @MockBean(reset = MockReset.NONE)
-  var mongoDb: MongoDatabase = _
+  override def getObject: MongoDatabase = {
+    runDummyMongo
+    val mongodb = MongoClient(getMongoUri).getDatabase(database).withCodecRegistry(codecRegistry)
+    mongodb
+  }
 
-  // other attempts:
-  //  @MockBean
-  //  lazy val mongoDb: MongoDatabase = {
-  //    MongoClient(getMongoUri).getDatabase(database).withCodecRegistry(codecRegistry)
-  //  }
-
-  //  def mongoDb: MongoDatabase = {
-  //    MongoClient(getMongoUri).getDatabase(database).withCodecRegistry(codecRegistry)
-  //  }
-
-
+  override def getObjectType: Class[_] = classOf[MongoDatabase]
 }
