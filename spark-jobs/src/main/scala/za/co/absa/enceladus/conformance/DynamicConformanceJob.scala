@@ -59,6 +59,8 @@ object DynamicConformanceJob {
   private val confReader: ConfigReader = new ConfigReader(conf)
   private val menasBaseUrls = MenasConnectionStringParser.parse(conf.getString("menas.rest.uri"))
 
+  private val partitionCount = conf.getInt("conformance.partitions")
+
   def main(args: Array[String]) {
     // This should be the first thing the app does to make secure Kafka work with our CA.
     // After Spring activates JavaX, it will be too late.
@@ -313,7 +315,9 @@ object DynamicConformanceJob {
     // ensure the whole path but version exists
     fsUtils.createAllButLastSubDir(pathCfg.publishPath)
 
-    withPartCols.write.parquet(pathCfg.publishPath)
+    withPartCols
+      .repartition(partitionCount)
+      .write.parquet(pathCfg.publishPath)
 
     val publishDirSize = fsUtils.getDirectorySize(pathCfg.publishPath)
     performance.finishMeasurement(publishDirSize, recordCount)

@@ -61,6 +61,8 @@ object StandardizationJob {
   private val menasBaseUrls = MenasConnectionStringParser.parse(conf.getString("menas.rest.uri"))
   private final val SparkCSVReaderMaxColumnsDefault: Int = 20480
 
+  private val partitionCount = conf.getInt("standardized.partitions")
+
   def main(args: Array[String]) {
     // This should be the first thing the app does to make secure Kafka work with our CA.
     // After Spring activates JavaX, it will be too late.
@@ -373,7 +375,9 @@ object StandardizationJob {
     }
     if (recordCount == 0) { handleEmptyOutputAfterStandardization() }
 
-    standardizedDF.write.parquet(pathCfg.outputPath)
+    standardizedDF
+      .repartition(partitionCount)
+      .write.parquet(pathCfg.outputPath)
     // Store performance metrics
     // (record count, directory sizes, elapsed time, etc. to _INFO file metadata and performance file)
     val stdDirSize = fsUtils.getDirectorySize(pathCfg.outputPath)
